@@ -1,0 +1,4 @@
+# connect to aws s3 database from flask app
+pip install flask boto3
+
+pip install flask-cors  

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#244f40">
+  <meta name="description" content="Secure administrator sign in to Relay Workspace.">
+  <title>Admin Sign In | Gopal's Workspace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="login.css">
+  <script src="login.js" defer></script>
+</head>
+<body>
+  <main class="login-layout">
+    <aside class="brand-panel" aria-label="Relay Workspace introduction">
+      <a class="brand" href="#" aria-label="Relay Workspace home">
+        <span class="brand-mark" aria-hidden="true"><span></span><i></i></span>
+        <span class="brand-name">Gopal's Space</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-workspace">WORKSPACE</span>
+      </a>
+
+      <section class="brand-copy">
+        <h1>Good things<br>start with<br><em>a little space.</em></h1>
+        <p class="brand-description">Bring your ideas together.<br>Make the next move yours.</p>
+      </section>
+
+      <div class="artwork" aria-hidden="true">
+        <div class="orbit orbit-one"></div>
+        <div class="orbit orbit-two"></div>
+        <div class="spark">✳</div>
+        <div class="idea-card">
+          <p class="card-eyebrow">A FRESH PERSPECTIVE</p>
+          <p class="card-title">One thing<br>at a time.</p>
+          <div class="card-lines"><span></span><span></span></div>
+          <span class="card-dot">↗</span>
+        </div>
+        <div class="floating-note"><span>↗</span> Room to grow</div>
+      </div>
+      <p class="panel-footer">A calmer place to make progress.</p>
+    </aside>
+
+    <section class="form-panel" aria-labelledby="login-title">
+      <header class="topbar">
+        <span class="demo-label">ADMIN PORTAL</span>
+      </header>
+
+      <div class="login-content">
+        <p class="step-label">01 / ADMIN SIGN IN</p>
+        <h2 id="login-title">Welcome back.</h2>
+        <p class="form-intro">A little focus. A fresh start. Sign in to your workspace.</p>
+
+        <form id="login-form" novalidate>
+          <div class="field-group">
+            <label for="email">Admin email address</label>
+            <input id="email" name="email" type="email" placeholder="you@example.com"
+              autocomplete="username" inputmode="email" required aria-describedby="email-error">
+            <p class="field-error" id="email-error" aria-live="polite"></p>
+          </div>
+
+          <div class="field-group">
+            <label for="password">Password</label>
+            <div class="password-wrap">
+              <input id="password" name="password" type="password" autocomplete="current-password"
+                required aria-describedby="password-error">
+              <button class="show-password" type="button" id="toggle-password"
+                aria-label="Show password" aria-pressed="false">Show</button>
+            </div>
+            <p class="field-error" id="password-error" aria-live="polite"></p>
+          </div>
+
+          <div class="form-options">
+            <label class="remember-option" for="remember">
+              <input id="remember" name="remember" type="checkbox">
+              <span>Remember me</span>
+            </label>
+            <a href="#" id="forgot-link">Forgot password?</a>
+          </div>
+
+          <button class="submit-button" type="submit">
+            <span>Sign in</span><span class="submit-arrow" aria-hidden="true">↗</span>
+          </button>
+          <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
+        </form>
+
+        <p class="security-note" id="security-note"><span aria-hidden="true">●</span> For your security, sign in only from a trusted device.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

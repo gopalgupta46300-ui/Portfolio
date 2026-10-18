@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Portfolio administrator dashboard">
+    <title>Admin Dashboard | Portfolio</title>
+
+    <link rel="stylesheet" href="dashboard.css">
+    <script src="dashboard.js" defer></script>
+</head>
+
+<body>
+
+    <div class="dashboard-layout">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="dashboard.html" class="brand">
+                <span class="brand-icon">P</span>
+                <span>Portfolio Admin</span>
+            </a>
+
+            <nav class="sidebar-nav" aria-label="Main navigation">
+                <p class="nav-label">WORKSPACE</p>
+
+                <a href="dashboard.html" class="nav-link active">
+                    <span aria-hidden="true">▦</span>
+                    Dashboard
+                </a>
+
+                <a href="#projects" class="nav-link">
+                    <span aria-hidden="true">▤</span>
+                    Projects
+                </a>
+
+                <a href="#settings" class="nav-link">
+                    <span aria-hidden="true">⚙</span>
+                    Settings
+                </a>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="admin-profile">
+                    <div class="profile-avatar">A</div>
+                    <div class="profile-info">
+                        <strong>Administrator</strong>
+                        <span id="admin-email">Loading...</span>
+                    </div>
+                </div>
+
+                <button id="logout-button" class="logout-button" type="button">
+                    <span aria-hidden="true">↪</span>
+                    Log out
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <header class="topbar">
+                <div>
+                    <p class="breadcrumb">Workspace / Dashboard</p>
+                    <h1>Dashboard</h1>
+                </div>
+
+                <a href="../index.html" target="_blank" rel="noopener noreferrer" class="view-portfolio">
+                    View Portfolio ↗
+                </a>
+            </header>
+
+            <section class="welcome-section">
+                <div>
+                    <p class="eyebrow">ADMINISTRATION</p>
+                    <h2>Welcome back!</h2>
+                    <p>Manage your projects and keep your portfolio up to date.</p>
+                </div>
+                <div class="welcome-icon" aria-hidden="true">✦</div>
+            </section>
+
+            <!-- Overview Cards -->
+            <section class="overview-section" aria-labelledby="overview-title">
+                <div class="section-heading">
+                    <div>
+                        <h2 id="overview-title">Overview</h2>
+                        <p>Get a quick look at your portfolio.</p>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <article class="stat-card">
+                        <div class="stat-icon projects-icon">▤</div>
+                        <p>Total Projects</p>
+                        <h3 id="total-projects">—</h3>
+                        <span>All projects</span>
+                    </article>
+
+                    <article class="stat-card">
+                        <div class="stat-icon published-icon">✓</div>
+                        <p>Published Projects</p>
+                        <h3 id="published-projects">—</h3>
+                        <span>Visible on portfolio</span>
+                    </article>
+
+                    <article class="stat-card">
+                        <div class="stat-icon draft-icon">◷</div>
+                        <p>Draft Projects</p>
+                        <h3 id="draft-projects">—</h3>
+                        <span>Not published</span>
+                    </article>
+                </div>
+            </section>
+
+            <!-- Project Management -->
+            <section id="projects" class="projects-section" aria-labelledby="projects-title">
+                <div class="section-heading">
+                    <div>
+                        <h2 id="projects-title">Project Management</h2>
+                        <p>View and manage your portfolio projects.</p>
+                    </div>
+
+                    <button id="add-project-button" class="primary-button" type="button">
+                        + Add Project
+                    </button>
+                </div>
+
+                <div id="status" class="status-message" role="status" aria-live="polite"></div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Technology</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projects-table-body">
+                            <tr>
+                                <td colspan="4" class="empty-state">
+                                    Loading projects...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Settings / Bio -->
+            <section id="settings" class="settings-card" aria-labelledby="settings-title">
+                <h2 id="settings-title">About Me</h2>
+                <p>Update the bio displayed on your public portfolio.</p>
+
+                <form id="bio-form">
+                    <div class="form-group">
+                        <label for="bio-description">Bio Description</label>
+                        <textarea id="bio-description" name="bio-description" rows="7" maxlength="3000"
+                            placeholder="Write a short introduction about yourself..." required></textarea>
+                        <small>Maximum 3000 characters.</small>
+                    </div>
+
+                    <button type="submit" id="save-bio-button">
+                        Save Bio
+                    </button>
+
+                    <p id="bio-status" role="status" aria-live="polite"></p>
+                </form>
+            </section>
+
+            <footer class="dashboard-footer">
+                <p>© 2026 Portfolio Admin. All rights reserved.</p>
+            </footer>
+
+        </main>
+    </div>
+
+</body>
+
+</html>
