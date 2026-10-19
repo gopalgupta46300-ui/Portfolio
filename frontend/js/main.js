@@ -1,5 +1,5 @@
 
-const API_URL = "http://127.0.0.1:5000/api/projects";
+const API_URL = "https://portfolio-team-vibe5.vercel.app/api/projects";
 
 const projectsContainer = document.getElementById("projects-grid");
 const statusElement = document.getElementById("project-status");
@@ -72,7 +72,7 @@ async function loadBio() {
 
     try {
         const response = await fetch(
-            "http://127.0.0.1:5000/api/bio"
+            "https://portfolio-team-vibe5.vercel.app/api/bio"
         );
 
         const result = await response.json();
