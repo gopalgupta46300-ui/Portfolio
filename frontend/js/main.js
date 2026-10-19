@@ -1,12 +1,19 @@
 
-const API_URL = "https://portfolio-team-vibe5.vercel.app/api/projects";
+const API_BASE_URL = "https://portfolio-team-vibe5.vercel.app";
+
+// ------------------- Projects -------------------
 
 const projectsContainer = document.getElementById("projects-grid");
 const statusElement = document.getElementById("project-status");
 
 async function loadProjects() {
+    if (!projectsContainer || !statusElement) {
+        console.error("Projects HTML elements not found.");
+        return;
+    }
+
     try {
-        const response = await fetch(API_URL);
+        const response = await fetch(`${API_BASE_URL}/api/projects`);
 
         if (!response.ok) {
             throw new Error(`HTTP error: ${response.status}`);
@@ -14,8 +21,8 @@ async function loadProjects() {
 
         const result = await response.json();
 
-        if (!result.success) {
-            throw new Error("The API could not load projects.");
+        if (!result.success || !Array.isArray(result.data)) {
+            throw new Error("Invalid projects API response.");
         }
 
         projectsContainer.replaceChildren();
@@ -30,13 +37,14 @@ async function loadProjects() {
             card.className = "project-card";
 
             const title = document.createElement("h3");
-            title.textContent = project.title;
+            title.textContent = project.title || "Untitled project";
 
             const description = document.createElement("p");
             description.textContent = project.description || "";
 
             const techStack = document.createElement("p");
-            techStack.textContent = `Tech stack: ${project.tech_stack || "Not specified"}`;
+            techStack.textContent =
+                `Tech stack: ${project.tech_stack || "Not specified"}`;
 
             card.append(title, description, techStack);
 
@@ -52,40 +60,45 @@ async function loadProjects() {
             projectsContainer.appendChild(card);
         });
 
-        statusElement.textContent = `Loaded ${result.data.length} project(s).`;
+        statusElement.textContent =
+            `Loaded ${result.data.length} project(s).`;
 
     } catch (error) {
         console.error("Failed to load projects:", error);
         statusElement.textContent =
-            "Could not load projects. Check the server and try again.";
+            "Could not load projects. Please try again later.";
     }
 }
 
-loadProjects();
+// ------------------- Bio -------------------
 
-
-//   ------------------- bio_descriptions --------------------
 async function loadBio() {
     const bioElement = document.getElementById("bio-description");
 
     if (!bioElement) return;
 
     try {
-        const response = await fetch(
-            "https://portfolio-team-vibe5.vercel.app/api/bio"
-        );
+        const response = await fetch(`${API_BASE_URL}/api/bio`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
 
         const result = await response.json();
 
-        if (!response.ok || !result.success) {
+        if (!result.success) {
             throw new Error(result.message || "Unable to load bio.");
         }
 
         bioElement.textContent = result.content || "";
+
     } catch (error) {
         console.error("Error loading bio:", error);
         bioElement.textContent = "Bio is currently unavailable.";
     }
 }
 
-document.addEventListener("DOMContentLoaded", loadBio);
+document.addEventListener("DOMContentLoaded", () => {
+    loadProjects();
+    loadBio();
+});
