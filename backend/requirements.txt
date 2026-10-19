@@ -1,4 +1,4 @@
-# connect to aws s3 database from flask app
-pip install flask boto3
-
-pip install flask-cors  
+Flask>=2.0
+Flask-CORS>=3.0
+python-dotenv>=0.19
+supabase>=1.0
