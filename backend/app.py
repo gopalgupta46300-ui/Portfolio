@@ -1,3 +1,4 @@
+
 import os
 from dotenv import load_dotenv
 from flask import Flask
@@ -8,18 +9,6 @@ from admin import admin_bp
 
 load_dotenv()
 
-app = Flask(__name__)
-
-CORS(
-    app,
-    resources={
-        r"/api/*": {
-            "origins": [
-                "https://portfolio-frontend-jet-kappa.vercel.app"
-            ]
-        }
-    }
-)
 app = Flask(__name__)
 
 app.secret_key = os.getenv("FLASK_SECRET_KEY")
