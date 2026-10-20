@@ -2,7 +2,7 @@
   "use strict";
 
   /** Base URL of the Flask backend. Adjust if your server runs on a different port. */
-  const API_BASE = "http://127.0.0.1:5000";
+  const API_BASE = "https://portfolio-team-vibe5.vercel.app/";
 
   /** Where to send the admin after a successful login. */
   const DASHBOARD_URL = "dashboard.html";
