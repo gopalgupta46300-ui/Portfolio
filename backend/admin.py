@@ -1,4 +1,3 @@
-
 import os
 from functools import wraps
 
@@ -109,8 +108,14 @@ def login():
         }), 400
 
     admin_email = os.getenv("ADMIN_EMAIL", "").strip().lower()
-    supabase_url = os.getenv("SUPABASE_URL")
-    supabase_key = os.getenv("SUPABASE_KEY")
+supabase_url = os.getenv("SUPABASE_URL")
+
+# Prefer the publishable key; support legacy environment-variable names.
+supabase_key = (
+    os.getenv("SUPABASE_PUBLISHABLE_KEY")
+    or os.getenv("SUPABASE_ANON_KEY")
+    or os.getenv("SUPABASE_KEY")
+)
 
     if not admin_email or not supabase_url or not supabase_key:
         return jsonify({
