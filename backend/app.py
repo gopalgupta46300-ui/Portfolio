@@ -1,4 +1,3 @@
-
 import os
 from dotenv import load_dotenv
 from flask import Flask
@@ -27,11 +26,8 @@ CORS(
     resources={
         r"/api/*": {
             "origins": [
+                "https://portfolio-frontend-git-main-team-vibe5.vercel.app",
                 "https://portfolio-frontend-jet-kappa.vercel.app",
-                "http://127.0.0.1:5500",
-                "http://localhost:5500",
-                "http://127.0.0.1:5501",
-                "http://localhost:5501",
             ],
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"],
