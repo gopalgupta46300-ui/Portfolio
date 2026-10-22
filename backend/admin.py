@@ -107,7 +107,7 @@ def login():
             "message": "Email and password are required"
         }), 400
 
-    admin_email = os.getenv("ADMIN_EMAIL", "").strip().lower()
+admin_email = os.getenv("ADMIN_EMAIL", "").strip().lower()
 supabase_url = os.getenv("SUPABASE_URL")
 
 # Prefer the publishable key; support legacy environment-variable names.
