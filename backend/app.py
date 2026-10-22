@@ -1,20 +1,20 @@
 import os
+
 from dotenv import load_dotenv
 from flask import Flask
 from flask_cors import CORS
 
+# Load local environment variables before importing project modules.
+load_dotenv()
+
 from public import public_bp
 from admin import admin_bp
 
-from services.supabase_client import supabase
-
-load_dotenv()
-
 app = Flask(__name__)
 
-app.secret_key = os.getenv("FLASK_SECRET_KEY")
+app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY")
 
-if not app.secret_key:
+if not app.config["SECRET_KEY"]:
     raise RuntimeError("FLASK_SECRET_KEY is missing")
 
 app.config.update(
@@ -42,4 +42,4 @@ app.register_blueprint(public_bp)
 app.register_blueprint(admin_bp)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
