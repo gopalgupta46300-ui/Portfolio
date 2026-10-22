@@ -1,3 +1,4 @@
+
 import os
 from functools import wraps
 
@@ -5,7 +6,9 @@ from flask import Blueprint, jsonify, request, session, current_app
 from supabase import create_client
 from services.supabase_client import supabase
 
+
 admin_bp = Blueprint("admin", __name__, url_prefix="/api/admin")
+
 
 def admin_required(func):
     @wraps(func)
@@ -19,6 +22,7 @@ def admin_required(func):
         return func(*args, **kwargs)
 
     return wrapper
+
 
 @admin_bp.get("/settings/bio")
 @admin_required
@@ -51,7 +55,14 @@ def get_bio():
 @admin_bp.put("/settings/bio")
 @admin_required
 def save_bio():
-    data = request.get_json(silent=True) or {}
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict):
+        return jsonify({
+            "success": False,
+            "message": "A JSON object is required."
+        }), 400
+
     content = data.get("content")
 
     if not isinstance(content, str):
@@ -93,35 +104,51 @@ def save_bio():
         }), 500
 
 
-
 @admin_bp.post("/login")
 def login():
-    data = request.get_json(silent=True) or {}
+    data = request.get_json(silent=True)
 
-    email = data.get("email", "").strip().lower()
+    if not isinstance(data, dict):
+        return jsonify({
+            "success": False,
+            "message": "A JSON object is required."
+        }), 400
+
+    email = data.get("email", "")
     password = data.get("password", "")
+
+    if not isinstance(email, str) or not isinstance(password, str):
+        return jsonify({
+            "success": False,
+            "message": "Email and password must be text."
+        }), 400
+
+    email = email.strip().lower()
 
     if not email or not password:
         return jsonify({
             "success": False,
-            "message": "Email and password are required"
+            "message": "Email and password are required."
         }), 400
 
-admin_email = os.getenv("ADMIN_EMAIL", "").strip().lower()
-supabase_url = os.getenv("SUPABASE_URL")
+    admin_email = os.getenv("ADMIN_EMAIL", "").strip().lower()
+    supabase_url = os.getenv("SUPABASE_URL")
 
-# Prefer the publishable key; support legacy environment-variable names.
-supabase_key = (
-os.getenv("SUPABASE_PUBLISHABLE_KEY")
- or os.getenv("SUPABASE_ANON_KEY")
- or os.getenv("SUPABASE_KEY")
-)
+    # Prefer the publishable key; support legacy environment-variable names.
+    supabase_key = (
+        os.getenv("SUPABASE_PUBLISHABLE_KEY")
+        or os.getenv("SUPABASE_ANON_KEY")
+        or os.getenv("SUPABASE_KEY")
+    )
 
-if not admin_email or not supabase_url or not supabase_key:
-    return jsonify({
-        "success": False,
-        "message": "Authentication is not configured"
-}), 500
+    if not admin_email or not supabase_url or not supabase_key:
+        current_app.logger.error(
+            "Admin authentication environment variables are missing."
+        )
+        return jsonify({
+            "success": False,
+            "message": "Authentication is not configured."
+        }), 500
 
     try:
         auth_client = create_client(supabase_url, supabase_key)
@@ -136,29 +163,31 @@ if not admin_email or not supabase_url or not supabase_key:
         if not user or not user.email:
             return jsonify({
                 "success": False,
-                "message": "Invalid credentials"
+                "message": "Invalid credentials."
             }), 401
 
         if user.email.lower() != admin_email:
             return jsonify({
                 "success": False,
-                "message": "This account is not authorized as admin"
+                "message": "This account is not authorized as admin."
             }), 403
 
+        # Start a fresh session after successful authentication.
         session.clear()
         session["admin_user_id"] = str(user.id)
         session["admin_email"] = user.email
 
         return jsonify({
             "success": True,
-            "message": "Login successful",
-            "admin": {"email": user.email}
+            "message": "Login successful.",
+            "admin": {
+                "email": user.email
+            }
         }), 200
 
     except Exception:
-        # Keep provider errors and sensitive details in server logs only.
-        import logging
-        logging.exception("Admin login failed")
+        # Keep provider errors and sensitive details in server logs.
+        current_app.logger.exception("Admin login failed")
 
         return jsonify({
             "success": False,
@@ -183,5 +212,5 @@ def logout():
 
     return jsonify({
         "success": True,
-        "message": "Logged out successfully"
+        "message": "Logged out successfully."
     }), 200
