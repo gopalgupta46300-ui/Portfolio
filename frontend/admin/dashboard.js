@@ -1,9 +1,20 @@
-
 "use strict";
 
-const API_BASE_URL = "https://portfolio-team-vibe5.vercel.app/api";
+const API_BASE_URL = (() => {
+    const explicit = window.PORTFOLIO_API_BASE || "";
+    if (explicit) {
+        return explicit.replace(/\/$/, "");
+    }
 
-// DOM elements
+    const hostname = window.location.hostname;
+
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+        return "http://localhost:5000";
+    }
+
+    return "https://portfolio-team-vibe5.vercel.app";
+})();
+
 const adminEmail = document.getElementById("admin-email");
 const logoutButton = document.getElementById("logout-button");
 const statusElement = document.getElementById("status");
@@ -19,10 +30,6 @@ const bioInput = document.getElementById("bio-description");
 const bioStatus = document.getElementById("bio-status");
 const saveBioButton = document.getElementById("save-bio-button");
 
-// --------------------------------------------------
-// Status messages
-// --------------------------------------------------
-
 function showStatus(message, type = "") {
     if (!statusElement) return;
 
@@ -34,12 +41,8 @@ function showStatus(message, type = "") {
     }
 }
 
-// --------------------------------------------------
-// Security helpers
-// --------------------------------------------------
-
 function escapeHTML(value) {
-    return String(value ?? "").replace(/[&<>"']/g, character => {
+    return String(value ?? "").replace(/[&<>\"']/g, character => {
         const entities = {
             "&": "&amp;",
             "<": "&lt;",
@@ -68,13 +71,9 @@ function safeURL(value) {
     return null;
 }
 
-// --------------------------------------------------
-// Session validation
-// --------------------------------------------------
-
 async function checkSession() {
     try {
-        const response = await fetch(`${API_BASE_URL}/admin/me`, {
+        const response = await fetch(`${API_BASE_URL}/api/admin/me`, {
             method: "GET",
             credentials: "include"
         });
@@ -85,10 +84,7 @@ async function checkSession() {
         }
 
         if (!response.ok) {
-            showStatus(
-                `Session check failed (${response.status}).`,
-                "error"
-            );
+            showStatus(`Session check failed (${response.status}).`, "error");
             return false;
         }
 
@@ -106,28 +102,18 @@ async function checkSession() {
         return true;
     } catch (error) {
         console.error("Session check failed:", error);
-
-        showStatus(
-            "Cannot connect to the backend. Make sure Flask is running.",
-            "error"
-        );
-
+        showStatus("Cannot connect to the backend. Make sure Flask is running.", "error");
         return false;
     }
 }
-
-// --------------------------------------------------
-// Load bio
-// --------------------------------------------------
 
 async function loadBio() {
     if (!bioInput || !bioStatus) return;
 
     try {
-        const response = await fetch(
-            `${API_BASE_URL}/admin/settings/bio`,
-            { credentials: "include" }
-        );
+        const response = await fetch(`${API_BASE_URL}/api/admin/settings/bio`, {
+            credentials: "include"
+        });
 
         if (response.status === 401) {
             window.location.replace("login.html");
@@ -148,10 +134,6 @@ async function loadBio() {
     }
 }
 
-// --------------------------------------------------
-// Save bio
-// --------------------------------------------------
-
 if (bioForm) {
     bioForm.addEventListener("submit", async event => {
         event.preventDefault();
@@ -167,17 +149,14 @@ if (bioForm) {
         bioStatus.textContent = "Saving...";
 
         try {
-            const response = await fetch(
-                `${API_BASE_URL}/admin/settings/bio`,
-                {
-                    method: "PUT",
-                    credentials: "include",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ content })
-                }
-            );
+            const response = await fetch(`${API_BASE_URL}/api/admin/settings/bio`, {
+                method: "PUT",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ content })
+            });
 
             if (response.status === 401) {
                 window.location.replace("login.html");
@@ -200,10 +179,6 @@ if (bioForm) {
     });
 }
 
-// --------------------------------------------------
-// Load projects
-// --------------------------------------------------
-
 async function loadProjects() {
     if (!projectsTableBody) return;
 
@@ -214,11 +189,7 @@ async function loadProjects() {
     `;
 
     try {
-        // NOTE:
-        // This public endpoint returns published projects only.
-        // Use /admin/projects instead once you implement a protected
-        // backend endpoint that returns all projects, including drafts.
-        const response = await fetch(`${API_BASE_URL}/projects`);
+        const response = await fetch(`${API_BASE_URL}/api/projects`);
 
         if (!response.ok) {
             throw new Error(`Failed to fetch projects (${response.status}).`);
@@ -249,14 +220,8 @@ async function loadProjects() {
     }
 }
 
-// --------------------------------------------------
-// Project statistics
-// --------------------------------------------------
-
 function updateStatistics(projects) {
-    const publishedCount = projects.filter(
-        project => project.published === true
-    ).length;
+    const publishedCount = projects.filter(project => project.published === true).length;
 
     if (totalProjectsElement) {
         totalProjectsElement.textContent = projects.length;
@@ -271,19 +236,13 @@ function updateStatistics(projects) {
     }
 }
 
-// --------------------------------------------------
-// Render project table
-// --------------------------------------------------
-
 function renderProjects(projects) {
     if (!projectsTableBody) return;
 
     if (projects.length === 0) {
         projectsTableBody.innerHTML = `
             <tr>
-                <td colspan="4" class="empty-state">
-                    No projects found.
-                </td>
+                <td colspan="4" class="empty-state">No projects found.</td>
             </tr>
         `;
         return;
@@ -299,22 +258,12 @@ function renderProjects(projects) {
 
         const techStack = escapeHTML(technologies);
         const isPublished = project.published === true;
-
         const githubURL = safeURL(project.github_url);
         const demoURL = safeURL(project.demo_url);
 
         const links = [
-            githubURL
-                ? `<a href="${escapeHTML(githubURL)}"
-                     target="_blank"
-                     rel="noopener noreferrer">GitHub</a>`
-                : "",
-
-            demoURL
-                ? `<a href="${escapeHTML(demoURL)}"
-                     target="_blank"
-                     rel="noopener noreferrer">Demo</a>`
-                : ""
+            githubURL ? `<a href="${escapeHTML(githubURL)}" target="_blank" rel="noopener noreferrer">GitHub</a>` : "",
+            demoURL ? `<a href="${escapeHTML(demoURL)}" target="_blank" rel="noopener noreferrer">Demo</a>` : ""
         ].filter(Boolean).join(" ");
 
         return `
@@ -323,31 +272,19 @@ function renderProjects(projects) {
                     <div class="project-title">${title}</div>
                     <div class="project-description">${description}</div>
                 </td>
-
                 <td>
                     <div class="tech-list">${techStack}</div>
                 </td>
-
                 <td>
-                    <span class="status-badge ${isPublished ? "published" : "draft"
-            }">
-                        ${isPublished ? "Published" : "Draft"}
-                    </span>
+                    <span class="status-badge ${isPublished ? "published" : "draft"}">${isPublished ? "Published" : "Draft"}</span>
                 </td>
-
                 <td>
-                    <div class="project-links">
-                        ${links || "<span>—</span>"}
-                    </div>
+                    <div class="project-links">${links || "<span>—</span>"}</div>
                 </td>
             </tr>
         `;
     }).join("");
 }
-
-// --------------------------------------------------
-// Logout
-// --------------------------------------------------
 
 async function logout() {
     if (!logoutButton) return;
@@ -355,7 +292,7 @@ async function logout() {
     logoutButton.disabled = true;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/admin/logout`, {
+        const response = await fetch(`${API_BASE_URL}/api/admin/logout`, {
             method: "POST",
             credentials: "include"
         });
@@ -376,22 +313,11 @@ if (logoutButton) {
     logoutButton.addEventListener("click", logout);
 }
 
-// --------------------------------------------------
-// Add project placeholder
-// --------------------------------------------------
-
 if (addProjectButton) {
     addProjectButton.addEventListener("click", () => {
-        showStatus(
-            "The Add Project form has not been implemented yet.",
-            "success"
-        );
+        showStatus("The Add Project form has not been implemented yet.", "success");
     });
 }
-
-// --------------------------------------------------
-// Initialize dashboard
-// --------------------------------------------------
 
 async function initializeDashboard() {
     const authenticated = await checkSession();
