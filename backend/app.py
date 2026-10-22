@@ -6,6 +6,8 @@ from flask_cors import CORS
 from public import public_bp
 from admin import admin_bp
 
+from services.supabase_client import supabase
+
 load_dotenv()
 
 app = Flask(__name__)
