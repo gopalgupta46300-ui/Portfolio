@@ -1,11 +1,8 @@
-
 from flask import Blueprint, jsonify, current_app
 from services.supabase_client import supabase
 
 public_bp = Blueprint("public", __name__, url_prefix="/api")
 
-from flask import jsonify, current_app
-from services.supabase_client import supabase
 
 @public_bp.get("/bio")
 def get_public_bio():
@@ -32,9 +29,10 @@ def get_public_bio():
             "success": False,
             "message": "Unable to load bio."
         }), 500
-    
+
+
 #  --------------------------  projects -----------------
-@public_bp.route("projects", methods=["GET"])
+@public_bp.get("/projects")
 def get_projects():
     try:
         response = (
