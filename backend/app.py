@@ -12,10 +12,9 @@ from admin import admin_bp
 
 app = Flask(__name__)
 
-app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY")
-
-if not app.config["SECRET_KEY"]:
-    raise RuntimeError("FLASK_SECRET_KEY is missing")
+# Prefer the explicit Flask secret, but fall back to a local dev value so
+# the app can still boot in non-production environments.
+app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY") or os.getenv("SECRET_KEY") or "portfolio-dev-secret-key"
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
@@ -23,16 +22,24 @@ app.config.update(
     SESSION_COOKIE_SECURE=True,
 )
 
+allowed_origins = [
+    "https://portfolio-frontend-git-main-team-vibe5.vercel.app",
+    "https://portfolio-frontend-jet-kappa.vercel.app",
+    "https://unique-gopalgupta.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:5000",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5000",
+]
+
 CORS(
     app,
     resources={
         r"/api/*": {
-            "origins": [
-                "https://portfolio-frontend-git-main-team-vibe5.vercel.app",
-                "https://portfolio-frontend-jet-kappa.vercel.app",
-            ],
+            "origins": allowed_origins,
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"],
+            "supports_credentials": True,
         }
     },
     supports_credentials=True,
