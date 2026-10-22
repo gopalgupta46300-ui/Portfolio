@@ -112,16 +112,16 @@ supabase_url = os.getenv("SUPABASE_URL")
 
 # Prefer the publishable key; support legacy environment-variable names.
 supabase_key = (
-    os.getenv("SUPABASE_PUBLISHABLE_KEY")
-    or os.getenv("SUPABASE_ANON_KEY")
-    or os.getenv("SUPABASE_KEY")
+os.getenv("SUPABASE_PUBLISHABLE_KEY")
+ or os.getenv("SUPABASE_ANON_KEY")
+ or os.getenv("SUPABASE_KEY")
 )
 
-    if not admin_email or not supabase_url or not supabase_key:
-        return jsonify({
-            "success": False,
-            "message": "Authentication is not configured"
-        }), 500
+if not admin_email or not supabase_url or not supabase_key:
+    return jsonify({
+        "success": False,
+        "message": "Authentication is not configured"
+}), 500
 
     try:
         auth_client = create_client(supabase_url, supabase_key)
