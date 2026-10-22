@@ -1,10 +1,21 @@
 (() => {
   "use strict";
 
-  // Flask backend base URL
-  const API_BASE = "https://portfolio-team-vibe5.vercel.app";
+  const API_BASE = (() => {
+    const explicit = window.PORTFOLIO_API_BASE || "";
+    if (explicit) {
+      return explicit.replace(/\/$/, "");
+    }
 
-  // Redirect after successful login
+    const hostname = window.location.hostname;
+
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return "http://localhost:5000";
+    }
+
+    return "https://portfolio-team-vibe5.vercel.app";
+  })();
+
   const DASHBOARD_URL = "dashboard.html";
 
   const form = document.querySelector("#login-form");
@@ -17,34 +28,29 @@
   const submitButton = form.querySelector('button[type="submit"]');
   const forgotLink = document.querySelector("#forgot-link");
 
-  // Password visibility toggle
+  if (!form || !emailInput || !passwordInput || !togglePassword || !formMessage || !submitButton || !forgotLink) {
+    return;
+  }
+
   togglePassword.addEventListener("click", () => {
     const isVisible = passwordInput.type === "text";
 
     passwordInput.type = isVisible ? "password" : "text";
     togglePassword.textContent = isVisible ? "Show" : "Hide";
-
-    togglePassword.setAttribute(
-      "aria-label",
-      isVisible ? "Show password" : "Hide password"
-    );
-
+    togglePassword.setAttribute("aria-label", isVisible ? "Show password" : "Hide password");
     togglePassword.setAttribute("aria-pressed", String(!isVisible));
     passwordInput.focus();
   });
 
-  // Display or clear validation errors
   function setError(input, errorElement, message) {
     errorElement.textContent = message;
     input.setAttribute("aria-invalid", message ? "true" : "false");
   }
 
-  // Validate email format
   function isValidEmail(value) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   }
 
-  // Clear email validation error while typing
   emailInput.addEventListener("input", () => {
     const email = emailInput.value.trim();
 
@@ -53,30 +59,23 @@
     }
   });
 
-  // Clear password validation error while typing
   passwordInput.addEventListener("input", () => {
     if (passwordInput.value.length > 0) {
       setError(passwordInput, passwordError, "");
     }
   });
 
-  // Forgot password message
   forgotLink.addEventListener("click", (event) => {
     event.preventDefault();
-
     formMessage.classList.remove("is-error");
-    formMessage.textContent =
-      "Password reset must be handled by your administrator or your configured account recovery service.";
+    formMessage.textContent = "Password reset must be handled by your administrator or your configured account recovery service.";
   });
 
-  // Submit login form
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    // Clear previous errors and messages
     setError(emailInput, emailError, "");
     setError(passwordInput, passwordError, "");
-
     formMessage.textContent = "";
     formMessage.classList.remove("is-error");
 
@@ -85,30 +84,16 @@
 
     let firstInvalid = null;
 
-    // Client-side validation
     if (!email) {
-      setError(
-        emailInput,
-        emailError,
-        "Enter your admin email address."
-      );
+      setError(emailInput, emailError, "Enter your admin email address.");
       firstInvalid = emailInput;
     } else if (!isValidEmail(email)) {
-      setError(
-        emailInput,
-        emailError,
-        "Enter a valid email address."
-      );
+      setError(emailInput, emailError, "Enter a valid email address.");
       firstInvalid = emailInput;
     }
 
     if (!password) {
-      setError(
-        passwordInput,
-        passwordError,
-        "Enter your password."
-      );
-
+      setError(passwordInput, passwordError, "Enter your password.");
       firstInvalid ||= passwordInput;
     }
 
@@ -117,9 +102,7 @@
       return;
     }
 
-    // Disable button while login is processing
     submitButton.disabled = true;
-
     const buttonText = submitButton.querySelector("span:first-child");
 
     if (buttonText) {
@@ -127,93 +110,54 @@
     }
 
     try {
-      // Send exactly one login request
       const response = await fetch(`${API_BASE}/api/admin/login`, {
         method: "POST",
-
         credentials: "include",
-
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-
-        body: JSON.stringify({
-          email,
-          password
-        })
+        body: JSON.stringify({ email, password }),
       });
 
-      // Read server response
       let data = {};
 
       try {
         data = await response.json();
       } catch {
-        // Response was not valid JSON
+        // Ignore invalid JSON responses.
       }
 
-      // Successful login
       if (response.ok && data.success) {
         formMessage.classList.remove("is-error");
-
-        formMessage.textContent =
-          data.message || "Login successful. Redirecting…";
-
+        formMessage.textContent = data.message || "Login successful. Redirecting…";
         window.location.href = DASHBOARD_URL;
         return;
       }
 
-      // Handle server errors
       formMessage.classList.add("is-error");
 
       if (response.status === 400) {
-        formMessage.textContent =
-          data.message || "Email and password are required.";
-
+        formMessage.textContent = data.message || "Email and password are required.";
       } else if (response.status === 401) {
-        formMessage.textContent =
-          data.message || "Invalid email or password.";
-
+        formMessage.textContent = data.message || "Invalid email or password.";
         passwordInput.value = "";
-
-        setError(
-          passwordInput,
-          passwordError,
-          "Check your password and try again."
-        );
-
+        setError(passwordInput, passwordError, "Check your password and try again.");
         passwordInput.focus();
-
       } else if (response.status === 403) {
-        formMessage.textContent =
-          data.message || "This account is not authorised as admin.";
-
+        formMessage.textContent = data.message || "This account is not authorised as admin.";
       } else if (response.status === 404) {
-        formMessage.textContent =
-          "Login endpoint not found. Check the backend route.";
-
+        formMessage.textContent = "Login endpoint not found. Check the backend route.";
       } else if (response.status >= 500) {
-        formMessage.textContent =
-          data.message || "Server error. Please try again later.";
-
+        formMessage.textContent = data.message || "Server error. Please try again later.";
       } else {
-        formMessage.textContent =
-          data.message || `Login failed. HTTP ${response.status}.`;
+        formMessage.textContent = data.message || `Login failed. HTTP ${response.status}.`;
       }
-
     } catch (networkError) {
-      // CORS errors, connection failures, or blocked requests
       console.error("Login request failed:", networkError);
-
       formMessage.classList.add("is-error");
-
-      formMessage.textContent =
-        "Unable to reach the server. Check the connection and CORS settings.";
-
+      formMessage.textContent = "Unable to reach the server. Check the connection and CORS settings.";
     } finally {
-      // Re-enable button
       submitButton.disabled = false;
-
       if (buttonText) {
         buttonText.textContent = "Sign in";
       }
