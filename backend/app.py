@@ -16,23 +16,26 @@ app = Flask(__name__)
 # the app can still boot in non-production environments.
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY") or os.getenv("SECRET_KEY") or "portfolio-dev-secret-key"
 
-# Session cookies must be secure over HTTPS in production, but they must not be
-# forced to Secure on localhost (where the browser runs over plain HTTP).
-# The app can also override this explicitly through environment variables.
-use_secure_cookies = os.getenv("SESSION_COOKIE_SECURE", "false").strip().lower() in {"1", "true", "yes", "on"}
-if not use_secure_cookies:
-    # Local dev usually runs on http://localhost or http://127.0.0.1, where Secure cookies are rejected.
-    use_secure_cookies = False
+# Local development runs over http://localhost, so Secure cookies must stay off there.
+# Vercel/HTTPS deployments require Secure cookies and SameSite=None for cross-site
+# credentialed requests from the frontend domain.
+is_vercel = os.getenv("VERCEL") == "1" or os.getenv("VERCEL_ENV") == "production"
 
-same_site = os.getenv("SESSION_COOKIE_SAMESITE", "Lax" if not use_secure_cookies else "None").strip()
+if is_vercel:
+    app.config.update(
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="None",
+        SESSION_COOKIE_SECURE=True,
+    )
+else:
+    app.config.update(
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Lax",
+        SESSION_COOKIE_SECURE=False,
+    )
 
-app.config.update(
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE=same_site,
-    SESSION_COOKIE_SECURE=use_secure_cookies,
-)
-
-allowed_origins = [
+base_allowed_origins = [
+    "https://portfolio-team-vibe5.vercel.app",
     "https://portfolio-frontend-git-main-team-vibe5.vercel.app",
     "https://portfolio-frontend-jet-kappa.vercel.app",
     "https://unique-gopalgupta.vercel.app",
@@ -41,6 +44,17 @@ allowed_origins = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5000",
 ]
+
+env_allowed_origins = os.getenv("ALLOWED_ORIGINS", "")
+allowed_origins = [
+    origin.strip()
+    for origin in env_allowed_origins.split(",")
+    if origin.strip()
+]
+
+for origin in base_allowed_origins:
+    if origin not in allowed_origins:
+        allowed_origins.append(origin)
 
 CORS(
     app,
