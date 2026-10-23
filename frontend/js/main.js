@@ -13,6 +13,9 @@ const API_BASE_URL = (() => {
     return "";
 })();
 
+const projectsContainer = document.getElementById("projects-grid");
+const statusElement = document.getElementById("project-status");
+
 async function loadProjects() {
     if (!projectsContainer || !statusElement) {
         console.error("Projects HTML elements not found.");
