@@ -12,7 +12,7 @@ const API_BASE_URL = (() => {
         return "http://localhost:5000";
     }
 
-    return "https://portfolio-team-vibe5.vercel.app";
+    return "";
 })();
 
 const adminEmail = document.getElementById("admin-email");
@@ -112,7 +112,10 @@ async function loadBio() {
 
     try {
         const response = await fetch(`${API_BASE_URL}/api/admin/settings/bio`, {
-            credentials: "include"
+            credentials: "include",
+            headers: {
+                "X-Requested-With": "portfolio-admin"
+            }
         });
 
         if (response.status === 401) {
@@ -153,7 +156,8 @@ if (bioForm) {
                 method: "PUT",
                 credentials: "include",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "portfolio-admin"
                 },
                 body: JSON.stringify({ content })
             });
@@ -286,6 +290,61 @@ function renderProjects(projects) {
     }).join("");
 }
 
+async function createProject(projectData) {
+    const response = await fetch(`${API_BASE_URL}/api/admin/projects`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "portfolio-admin"
+        },
+        body: JSON.stringify(projectData)
+    });
+
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+        throw new Error(result.message || "Unable to create project.");
+    }
+
+    return result.project;
+}
+
+async function updateProject(projectId, projectData) {
+    const response = await fetch(`${API_BASE_URL}/api/admin/projects/${projectId}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "portfolio-admin"
+        },
+        body: JSON.stringify(projectData)
+    });
+
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+        throw new Error(result.message || "Unable to update project.");
+    }
+
+    return result.project;
+}
+
+async function deleteProject(projectId) {
+    const response = await fetch(`${API_BASE_URL}/api/admin/projects/${projectId}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+            "X-Requested-With": "portfolio-admin"
+        }
+    });
+
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+        throw new Error(result.message || "Unable to delete project.");
+    }
+
+    return result;
+}
+
 async function logout() {
     if (!logoutButton) return;
 
@@ -294,7 +353,10 @@ async function logout() {
     try {
         const response = await fetch(`${API_BASE_URL}/api/admin/logout`, {
             method: "POST",
-            credentials: "include"
+            credentials: "include",
+            headers: {
+                "X-Requested-With": "portfolio-admin"
+            }
         });
 
         if (!response.ok) {
@@ -314,8 +376,34 @@ if (logoutButton) {
 }
 
 if (addProjectButton) {
-    addProjectButton.addEventListener("click", () => {
-        showStatus("The Add Project form has not been implemented yet.", "success");
+    addProjectButton.addEventListener("click", async () => {
+        const title = window.prompt("Project title:", "New project");
+        if (title === null) return;
+
+        const description = window.prompt("Project description:", "Short project description");
+        if (description === null) return;
+
+        const tech_stack = window.prompt("Tech stack (comma separated):", "Python, Flask, Supabase");
+        if (tech_stack === null) return;
+
+        const demo_url = window.prompt("Demo URL (optional):", "");
+        const github_url = window.prompt("GitHub URL (optional):", "");
+
+        try {
+            await createProject({
+                title,
+                description,
+                tech_stack,
+                demo_url: demo_url || null,
+                github_url: github_url || null,
+                published: true
+            });
+            showStatus("Project created successfully.", "success");
+            await loadProjects();
+        } catch (error) {
+            console.error("Create project failed:", error);
+            showStatus(error.message, "error");
+        }
     });
 }
 

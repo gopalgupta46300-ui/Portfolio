@@ -1,26 +1,19 @@
 # Portfolio
 
-A personal portfolio website for Gopal ji Gupta. The site combines a static frontend with a Python Flask API and Supabase-backed data layer. The public portfolio loads the bio and published projects from the backend, while the admin dashboard provides authenticated access to update the bio and manage project content.
+A personal portfolio website for Gopal ji Gupta. The project combines a static frontend with a Python Flask API that loads data from Supabase. The public portfolio reads published project information and a bio description from the backend, while the admin dashboard lets an authenticated user update that content.
 
 ## Table of Contents
-
 - [Project Overview](#project-overview)
 - [Folder Structure](#folder-structure)
-- [Local Development Setup](#local-development-setup)
+- [Local Setup](#local-setup)
 - [Environment Variables](#environment-variables)
 - [Vercel Deployment](#vercel-deployment)
-- [Usage](#usage)
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
 
 ## Project Overview
 
-This repository contains a personal portfolio site with two deployment targets:
-
-- a static frontend deployed as a separate Vercel project
-- a Flask API backend deployed as a second Vercel project
-
-The public frontend presents the portfolio landing page, skills, projects, about content, and contact information. Dynamic content is retrieved from the backend using REST endpoints. The backend reads from Supabase and exposes a small auth-protected admin API for updating the site content.
+This repository contains a personal portfolio site built as a static frontend and a lightweight Flask backend. The public site presents a portfolio, skills, project highlights, and contact information. The backend exposes public read endpoints and a protected admin API for editing content. Data is stored in Supabase and loaded dynamically at runtime.
 
 ## Folder Structure
 
@@ -31,19 +24,18 @@ Portfolio/
 ├── .gitattributes
 ├── .gitignore
 ├── backend/
+│   ├── .env.example
 │   ├── app.py
 │   ├── admin.py
-│   ├── archi.md
 │   ├── public.py
 │   ├── pyproject.toml
 │   ├── requirements.txt
 │   ├── vercel.json
 │   └── services/
-│       ├── supabase_client.py
-│       └── requirements.txt   # Deprecated; kept only for manual cleanup.
+│       └── supabase_client.py
 ├── frontend/
-│   ├── index.html
 │   ├── vercel.json
+│   ├── index.html
 │   ├── css/
 │   │   └── style.css
 │   ├── js/
@@ -55,20 +47,12 @@ Portfolio/
 │       ├── login.css
 │       ├── login.html
 │       └── login.js
-├── vercel.json   # legacy file kept only until manual Git cleanup is completed
 └── checks.json
 ```
 
-## Local Development Setup
+## Local Setup
 
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/gopalgupta46300-ui/Portfolio.git
-cd Portfolio
-```
-
-### 2. Backend setup
+### Backend
 
 ```bash
 cd backend
@@ -77,75 +61,60 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Run the backend locally on port 5000:
+Then run the API on port 5000:
 
 ```bash
 python app.py
 ```
 
-The API will be available at:
-
-```text
-http://localhost:5000
-```
-
-### 3. Frontend setup
-
-Serve the frontend locally on port 3000:
+### Frontend
 
 ```bash
-cd ../frontend
+cd frontend
 python -m http.server 3000
 ```
 
-Open:
+Access the site at:
 
 ```text
 http://localhost:3000
 ```
 
-The frontend JavaScript keeps a localhost backend fallback for local development and uses relative `/api/...` paths in production.
-
 ## Environment Variables
 
-Create a `.env` file in the `backend/` directory. Required values:
+Create a `backend/.env` file and add values like:
 
 ```env
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SECRET_ROLE_KEY=your_service_role_key
 SUPABASE_PUBLISHABLE_KEY=your_publishable_key
 ADMIN_EMAIL=admin@example.com
-FLASK_SECRET_KEY=replace-with-a-long-random-secret
+FLASK_SECRET_KEY=replace-with-a-random-secret
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5000
 ```
 
-Notes:
-
-- `SUPABASE_SECRET_ROLE_KEY` is used only by the admin client
-- `SUPABASE_PUBLISHABLE_KEY` is used by the public client and must be allowed by Supabase Row Level Security (RLS)
-- `ALLOWED_ORIGINS` is optional in local development, but it is the main source of trusted frontend origins in production
-- Do not commit real secrets or `.env` files to the repository
+These variables are used for:
+- Supabase connection (`SUPABASE_URL`)
+- admin operations (`SUPABASE_SECRET_ROLE_KEY`)
+- public reads (`SUPABASE_PUBLISHABLE_KEY`)
+- session protection and admin authentication (`FLASK_SECRET_KEY`)
+- local and deployed CORS configuration (`ALLOWED_ORIGINS`)
 
 ## Vercel Deployment
 
 ### Backend project
-
-Settings:
-
 - Root Directory: `backend`
 - Framework: `Other`
-- Build Command: leave empty
-- Output Directory: leave empty
-- Runtime: Python
+- Build Command: empty
+- Output Directory: empty
 
-Backend file:
+Backend config is in `backend/vercel.json`:
 
 ```json
 {"version": 2, "builds": [{"src": "app.py", "use": "@vercel/python"}], "routes": [{"src": "/(.*)", "dest": "app.py"}]}
 ```
 
-Set the following env vars in Vercel for the backend project:
-
+Set these environment variables in Vercel Production:
 - `SUPABASE_URL`
 - `SUPABASE_SECRET_ROLE_KEY`
 - `SUPABASE_PUBLISHABLE_KEY`
@@ -154,64 +123,33 @@ Set the following env vars in Vercel for the backend project:
 - `ALLOWED_ORIGINS`
 
 ### Frontend project
-
-Settings:
-
 - Root Directory: `frontend`
 - Framework: `Other`
-- Build Command: leave empty
-- Output Directory: leave empty
+- Build Command: empty
+- Output Directory: empty
 
-Frontend file:
+Frontend config is in `frontend/vercel.json`:
 
 ```json
 {"rewrites": [{"source": "/api/:path*", "destination": "https://portfolio-team-vibe5.vercel.app/api/:path*"}]}
 ```
 
-This makes browser requests same-origin for the API and allows the admin session cookie to be treated as first-party.
-
-## Usage
-
-### Public route
-
-The main portfolio page loads:
-
-- `/api/bio`
-- `/api/projects`
-
-These are public routes and should respect Supabase RLS rules for reading `bio_descriptions` and published `projects` rows.
-
-### Admin dashboard
-
-Open the admin portal and sign in with the configured admin email and password. The dashboard can:
-
-- load the current bio
-- update the bio text
-- list project records
-- create, edit, and delete project rows
-
-The admin routes require an authenticated session plus the `X-Requested-With: portfolio-admin` header on state-changing requests.
-
 ## Troubleshooting
 
-### CORS errors
+### CORS issues
+- Ensure the frontend project rewrites `/api` requests to the backend Vercel domain.
+- Keep Flask-CORS as the single source of CORS headers.
+- Confirm the browser origin is present in `ALLOWED_ORIGINS`.
 
-- Ensure the frontend Vercel project rewrites `/api/*` to the backend domain
-- Keep Flask-CORS as the only source of CORS headers
-- Do not add a `headers` block to the root Vercel config
-- Verify the runtime origin is in `ALLOWED_ORIGINS`
+### 500 FUNCTION_INVOCATION_FAILED
+- Check the backend logs in Vercel.
+- Ensure `FLASK_SECRET_KEY` is set in Production.
+- Confirm the deployment root directory is `backend` and the app entry is `app.py`.
 
-### Admin login fails
-
-- Confirm `ADMIN_EMAIL`, `SUPABASE_URL`, and `SUPABASE_PUBLISHABLE_KEY` are set
-- Ensure the Supabase Auth user exists and matches the configured admin email
-- Check the backend logs for detailed authentication errors
-
-### Project content missing
-
-- Validate that the `projects` table exists in Supabase
-- Ensure the rows are `published = true` for public display
-- Confirm the public client has permission to read those rows through RLS
+### Admin login issues
+- Confirm `ADMIN_EMAIL` matches the Supabase Auth user.
+- Check that the configured Supabase publishable key and URL are valid.
+- Verify the browser includes cookies and the `credentials: "include"` fetch option.
 
 ## License
 

@@ -2,10 +2,13 @@ import os
 from functools import wraps
 
 from flask import Blueprint, current_app, jsonify, request, session
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from supabase import create_client
 
-from services.supabase_client import admin_supabase
+from services.supabase_client import supabase_admin
 
+limiter = Limiter(key_func=get_remote_address)
 admin_bp = Blueprint("admin", __name__, url_prefix="/api/admin")
 
 
@@ -42,7 +45,7 @@ def admin_required(func):
 def get_bio():
     try:
         result = (
-            admin_supabase.table("bio_descriptions")
+            supabase_admin.table("bio_descriptions")
             .select("id, content")
             .eq("id", 1)
             .limit(1)
@@ -100,7 +103,7 @@ def save_bio():
         }), 400
 
     try:
-        admin_supabase.table("bio_descriptions").upsert({
+        supabase_admin.table("bio_descriptions").upsert({
             "id": 1,
             "content": content
         }).execute()
@@ -155,9 +158,7 @@ def login():
     )
 
     if not admin_email or not supabase_url or not supabase_key:
-        current_app.logger.error(
-            "Admin authentication environment variables are missing."
-        )
+        current_app.logger.error("Admin authentication environment variables are missing.")
         return jsonify({
             "success": False,
             "message": "Authentication is not configured."
@@ -285,7 +286,7 @@ def create_project():
         }), 400
 
     try:
-        result = admin_supabase.table("projects").insert(payload).execute()
+        result = supabase_admin.table("projects").insert(payload).execute()
         return jsonify({
             "success": True,
             "message": "Project created successfully.",
@@ -312,7 +313,7 @@ def update_project(project_id):
         }), 400
 
     try:
-        result = admin_supabase.table("projects").update(payload).eq("id", project_id).execute()
+        result = supabase_admin.table("projects").update(payload).eq("id", project_id).execute()
         return jsonify({
             "success": True,
             "message": "Project updated successfully.",
@@ -331,7 +332,7 @@ def update_project(project_id):
 @require_admin_header
 def delete_project(project_id):
     try:
-        admin_supabase.table("projects").delete().eq("id", project_id).execute()
+        supabase_admin.table("projects").delete().eq("id", project_id).execute()
         return jsonify({
             "success": True,
             "message": "Project deleted successfully."

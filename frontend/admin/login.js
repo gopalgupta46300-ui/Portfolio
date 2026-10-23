@@ -13,7 +13,7 @@
       return "http://localhost:5000";
     }
 
-    return "https://portfolio-team-vibe5.vercel.app";
+    return "";
   })();
 
   const DASHBOARD_URL = "dashboard.html";

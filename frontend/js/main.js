@@ -1,10 +1,17 @@
+const API_BASE_URL = (() => {
+    const explicit = window.PORTFOLIO_API_BASE || "";
+    if (explicit) {
+        return explicit.replace(/\/$/, "");
+    }
 
-const API_BASE_URL = "https://portfolio-team-vibe5.vercel.app";
+    const hostname = window.location.hostname;
 
-// ------------------- Projects -------------------
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+        return "http://localhost:5000";
+    }
 
-const projectsContainer = document.getElementById("projects-grid");
-const statusElement = document.getElementById("project-status");
+    return "";
+})();
 
 async function loadProjects() {
     if (!projectsContainer || !statusElement) {
@@ -43,8 +50,7 @@ async function loadProjects() {
             description.textContent = project.description || "";
 
             const techStack = document.createElement("p");
-            techStack.textContent =
-                `Tech stack: ${project.tech_stack || "Not specified"}`;
+            techStack.textContent = `Tech stack: ${project.tech_stack || "Not specified"}`;
 
             card.append(title, description, techStack);
 
@@ -60,17 +66,12 @@ async function loadProjects() {
             projectsContainer.appendChild(card);
         });
 
-        statusElement.textContent =
-            `Loaded ${result.data.length} project(s).`;
-
+        statusElement.textContent = `Loaded ${result.data.length} project(s).`;
     } catch (error) {
         console.error("Failed to load projects:", error);
-        statusElement.textContent =
-            "Could not load projects. Please try again later.";
+        statusElement.textContent = "Could not load projects. Please try again later.";
     }
 }
-
-// ------------------- Bio -------------------
 
 async function loadBio() {
     const bioElement = document.getElementById("bio-description");
@@ -91,7 +92,6 @@ async function loadBio() {
         }
 
         bioElement.textContent = result.content || "";
-
     } catch (error) {
         console.error("Error loading bio:", error);
         bioElement.textContent = "Bio is currently unavailable.";

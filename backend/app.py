@@ -1,7 +1,7 @@
 import os
 
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, jsonify
 from flask_cors import CORS
 
 load_dotenv()
@@ -66,6 +66,10 @@ CORS(
 )
 
 limiter.init_app(app)
+
+@app.get("/")
+def health_check():
+    return jsonify({"success": True, "message": "API running"}), 200
 
 app.register_blueprint(public_bp)
 app.register_blueprint(admin_bp)

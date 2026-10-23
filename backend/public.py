@@ -1,6 +1,6 @@
 from flask import Blueprint, current_app, jsonify
 
-from services.supabase_client import public_supabase
+from services.supabase_client import supabase_public
 
 public_bp = Blueprint("public", __name__, url_prefix="/api")
 
@@ -9,7 +9,7 @@ public_bp = Blueprint("public", __name__, url_prefix="/api")
 def get_public_bio():
     try:
         result = (
-            public_supabase.table("bio_descriptions")
+            supabase_public.table("bio_descriptions")
             .select("content")
             .eq("id", 1)
             .limit(1)
@@ -36,7 +36,7 @@ def get_public_bio():
 def get_projects():
     try:
         response = (
-            public_supabase.table("projects")
+            supabase_public.table("projects")
             .select("id, title, description, tech_stack, demo_url, github_url, created_at")
             .eq("published", True)
             .order("created_at", desc=True)
