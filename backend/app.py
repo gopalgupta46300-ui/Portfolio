@@ -4,27 +4,27 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_cors import CORS
 
-# Load local environment variables before importing project modules.
 load_dotenv()
 
 from public import public_bp
-from admin import admin_bp
+from admin import admin_bp, limiter
 
 app = Flask(__name__)
 
-# Prefer the explicit Flask secret, but fall back to a local dev value so
-# the app can still boot in non-production environments.
-app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY") or os.getenv("SECRET_KEY") or "portfolio-dev-secret-key"
+app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY") or os.getenv("SECRET_KEY")
 
-# Local development runs over http://localhost, so Secure cookies must stay off there.
-# Vercel/HTTPS deployments require Secure cookies and SameSite=None for cross-site
-# credentialed requests from the frontend domain.
 is_vercel = os.getenv("VERCEL") == "1" or os.getenv("VERCEL_ENV") == "production"
+
+if is_vercel and not app.config["SECRET_KEY"]:
+    raise RuntimeError("FLASK_SECRET_KEY or SECRET_KEY must be set when running on Vercel.")
+
+if not app.config["SECRET_KEY"]:
+    app.config["SECRET_KEY"] = "portfolio-dev-secret-key"
 
 if is_vercel:
     app.config.update(
         SESSION_COOKIE_HTTPONLY=True,
-        SESSION_COOKIE_SAMESITE="None",
+        SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_SECURE=True,
     )
 else:
@@ -35,10 +35,6 @@ else:
     )
 
 base_allowed_origins = [
-    "https://portfolio-team-vibe5.vercel.app",
-    "https://portfolio-frontend-git-main-team-vibe5.vercel.app",
-    "https://portfolio-frontend-jet-kappa.vercel.app",
-    "https://unique-gopalgupta.vercel.app",
     "http://localhost:3000",
     "http://localhost:5000",
     "http://127.0.0.1:3000",
@@ -62,12 +58,14 @@ CORS(
         r"/api/*": {
             "origins": allowed_origins,
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization"],
+            "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
             "supports_credentials": True,
         }
     },
     supports_credentials=True,
 )
+
+limiter.init_app(app)
 
 app.register_blueprint(public_bp)
 app.register_blueprint(admin_bp)

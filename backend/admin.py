@@ -1,13 +1,26 @@
-
 import os
 from functools import wraps
 
-from flask import Blueprint, jsonify, request, session, current_app
+from flask import Blueprint, current_app, jsonify, request, session
 from supabase import create_client
-from services.supabase_client import supabase
 
+from services.supabase_client import admin_supabase
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/api/admin")
+
+
+def require_admin_header(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if request.headers.get("X-Requested-With") != "portfolio-admin":
+            return jsonify({
+                "success": False,
+                "message": "Invalid request origin."
+            }), 403
+
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 def admin_required(func):
@@ -29,7 +42,7 @@ def admin_required(func):
 def get_bio():
     try:
         result = (
-            supabase.table("bio_descriptions")
+            admin_supabase.table("bio_descriptions")
             .select("id, content")
             .eq("id", 1)
             .limit(1)
@@ -54,6 +67,7 @@ def get_bio():
 
 @admin_bp.put("/settings/bio")
 @admin_required
+@require_admin_header
 def save_bio():
     data = request.get_json(silent=True)
 
@@ -86,7 +100,7 @@ def save_bio():
         }), 400
 
     try:
-        supabase.table("bio_descriptions").upsert({
+        admin_supabase.table("bio_descriptions").upsert({
             "id": 1,
             "content": content
         }).execute()
@@ -105,6 +119,7 @@ def save_bio():
 
 
 @admin_bp.post("/login")
+@limiter.limit("5 per minute")
 def login():
     data = request.get_json(silent=True)
 
@@ -133,8 +148,6 @@ def login():
 
     admin_email = os.getenv("ADMIN_EMAIL", "").strip().lower()
     supabase_url = os.getenv("SUPABASE_URL")
-
-    # Prefer the publishable key; support legacy environment-variable names.
     supabase_key = (
         os.getenv("SUPABASE_PUBLISHABLE_KEY")
         or os.getenv("SUPABASE_ANON_KEY")
@@ -152,7 +165,6 @@ def login():
 
     try:
         auth_client = create_client(supabase_url, supabase_key)
-
         result = auth_client.auth.sign_in_with_password({
             "email": email,
             "password": password
@@ -172,7 +184,6 @@ def login():
                 "message": "This account is not authorized as admin."
             }), 403
 
-        # Start a fresh session after successful authentication.
         session.clear()
         session["admin_user_id"] = str(user.id)
         session["admin_email"] = user.email
@@ -186,9 +197,7 @@ def login():
         }), 200
 
     except Exception:
-        # Keep provider errors and sensitive details in server logs.
         current_app.logger.exception("Admin login failed")
-
         return jsonify({
             "success": False,
             "message": "Login failed. Check credentials and server logs."
@@ -207,6 +216,8 @@ def current_admin():
 
 
 @admin_bp.post("/logout")
+@admin_required
+@require_admin_header
 def logout():
     session.clear()
 
@@ -214,3 +225,120 @@ def logout():
         "success": True,
         "message": "Logged out successfully."
     }), 200
+
+
+def _normalize_project_payload(data):
+    if not isinstance(data, dict):
+        return None, "A JSON object is required."
+
+    title = data.get("title")
+    description = data.get("description")
+    tech_stack = data.get("tech_stack")
+    demo_url = data.get("demo_url")
+    github_url = data.get("github_url")
+    published = data.get("published", False)
+
+    if not isinstance(title, str) or not title.strip():
+        return None, "Project title is required."
+
+    if not isinstance(description, str) or not description.strip():
+        return None, "Project description is required."
+
+    if isinstance(tech_stack, str):
+        tech_stack = [item.strip() for item in tech_stack.split(",") if item.strip()]
+    elif tech_stack is None:
+        tech_stack = []
+    elif not isinstance(tech_stack, list):
+        return None, "Project technology stack must be a list or comma-separated string."
+
+    if demo_url is not None and not isinstance(demo_url, str):
+        return None, "Demo URL must be a string or null."
+
+    if github_url is not None and not isinstance(github_url, str):
+        return None, "GitHub URL must be a string or null."
+
+    if not isinstance(published, bool):
+        return None, "Published must be a boolean."
+
+    payload = {
+        "title": title.strip(),
+        "description": description.strip(),
+        "tech_stack": tech_stack,
+        "demo_url": demo_url.strip() if demo_url else None,
+        "github_url": github_url.strip() if github_url else None,
+        "published": published,
+    }
+
+    return payload, None
+
+
+@admin_bp.post("/projects")
+@admin_required
+@require_admin_header
+def create_project():
+    payload, error = _normalize_project_payload(request.get_json(silent=True))
+
+    if error:
+        return jsonify({
+            "success": False,
+            "message": error
+        }), 400
+
+    try:
+        result = admin_supabase.table("projects").insert(payload).execute()
+        return jsonify({
+            "success": True,
+            "message": "Project created successfully.",
+            "project": result.data[0] if result.data else payload
+        }), 201
+    except Exception:
+        current_app.logger.exception("Failed to create project")
+        return jsonify({
+            "success": False,
+            "message": "Unable to create project."
+        }), 500
+
+
+@admin_bp.put("/projects/<project_id>")
+@admin_required
+@require_admin_header
+def update_project(project_id):
+    payload, error = _normalize_project_payload(request.get_json(silent=True))
+
+    if error:
+        return jsonify({
+            "success": False,
+            "message": error
+        }), 400
+
+    try:
+        result = admin_supabase.table("projects").update(payload).eq("id", project_id).execute()
+        return jsonify({
+            "success": True,
+            "message": "Project updated successfully.",
+            "project": result.data[0] if result.data else payload
+        }), 200
+    except Exception:
+        current_app.logger.exception("Failed to update project")
+        return jsonify({
+            "success": False,
+            "message": "Unable to update project."
+        }), 500
+
+
+@admin_bp.delete("/projects/<project_id>")
+@admin_required
+@require_admin_header
+def delete_project(project_id):
+    try:
+        admin_supabase.table("projects").delete().eq("id", project_id).execute()
+        return jsonify({
+            "success": True,
+            "message": "Project deleted successfully."
+        }), 200
+    except Exception:
+        current_app.logger.exception("Failed to delete project")
+        return jsonify({
+            "success": False,
+            "message": "Unable to delete project."
+        }), 500
