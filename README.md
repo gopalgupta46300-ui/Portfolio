@@ -1,8 +1,26 @@
 # Portfolio
 
+<p align="center">
+  <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1400&q=80" alt="Portfolio Website Banner" width="100%" />
+</p>
+
+<p align="center">
+  <a href="https://portfolio-frontend-jet-kappa.vercel.app/" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Live%20Website-portfolio-frontend--jet--kappa.vercel.app-4A90E2?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Website" />
+  </a>
+  <img src="https://img.shields.io/badge/Status-In%20Progress-orange?style=for-the-badge" alt="Status" />
+  <img src="https://img.shields.io/badge/Stack-HTML%20%7C%20CSS%20%7C%20JS%20%7C%20Python-3B82F6?style=for-the-badge" alt="Tech Stack" />
+</p>
+
 Website is not complete yet.
 
 A personal portfolio website for Gopal ji Gupta. The project combines a static frontend with a Python Flask API that loads portfolio content from Supabase and powers an admin dashboard for content management.
+
+## Live Demo
+
+Visit the live portfolio here:
+
+- https://portfolio-frontend-jet-kappa.vercel.app/
 
 ## Project Status
 
