@@ -1,21 +1,38 @@
 # Portfolio
 
-A personal portfolio website for Gopal ji Gupta. The project combines a static frontend with a Python Flask API that loads data from Supabase. The public portfolio reads published project information and a bio description from the backend, while the admin dashboard lets an authenticated user update that content.
+Website is not complete yet.
 
-## Table of Contents
-- [Project Overview](#project-overview)
-- [Folder Structure](#folder-structure)
-- [Local Setup](#local-setup)
-- [Environment Variables](#environment-variables)
-- [Vercel Deployment](#vercel-deployment)
-- [Troubleshooting](#troubleshooting)
-- [License](#license)
+A personal portfolio website for Gopal ji Gupta. The project combines a static frontend with a Python Flask API that loads portfolio content from Supabase and powers an admin dashboard for content management.
 
-## Project Overview
+## Project Status
 
-This repository contains a personal portfolio site built as a static frontend and a lightweight Flask backend. The public site presents a portfolio, skills, project highlights, and contact information. The backend exposes public read endpoints and a protected admin API for editing content. Data is stored in Supabase and loaded dynamically at runtime.
+This project is currently a work in progress. The repository includes the public portfolio UI, backend APIs, and an administrative interface for managing the site content.
 
-## Folder Structure
+## Overview
+
+- Public portfolio website with sections for projects, skills, and contact information
+- Flask backend for serving API data
+- Supabase integration for content storage and retrieval
+- Admin login/dashboard for content updates
+- Vercel-ready deployment structure for frontend and backend
+
+## Tech Stack
+
+- Frontend: HTML, CSS, JavaScript
+- Backend: Python, Flask
+- Database / Content: Supabase
+- Hosting: Vercel
+
+## Language Composition
+
+This repository is primarily composed of:
+
+- CSS: 42.4%
+- HTML: 27.4%
+- JavaScript: 18.1%
+- Python: 12.1%
+
+## Repository Structure
 
 ```text
 Portfolio/
@@ -47,7 +64,8 @@ Portfolio/
 │       ├── login.css
 │       ├── login.html
 │       └── login.js
-└── checks.json
+├── checks.json
+└── .github/
 ```
 
 ## Local Setup
@@ -61,7 +79,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Then run the API on port 5000:
+Run the API locally:
 
 ```bash
 python app.py
@@ -74,7 +92,7 @@ cd frontend
 python -m http.server 3000
 ```
 
-Access the site at:
+Open the site in a browser:
 
 ```text
 http://localhost:3000
@@ -82,7 +100,7 @@ http://localhost:3000
 
 ## Environment Variables
 
-Create a `backend/.env` file and add values like:
+Create a `backend/.env` file with the following values:
 
 ```env
 SUPABASE_URL=https://your-project.supabase.co
@@ -94,27 +112,30 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5000
 ```
 
 These variables are used for:
+
 - Supabase connection (`SUPABASE_URL`)
 - admin operations (`SUPABASE_SECRET_ROLE_KEY`)
 - public reads (`SUPABASE_PUBLISHABLE_KEY`)
-- session protection and admin authentication (`FLASK_SECRET_KEY`)
-- local and deployed CORS configuration (`ALLOWED_ORIGINS`)
+- session protection and admin auth (`FLASK_SECRET_KEY`)
+- allowed frontend/backend origins (`ALLOWED_ORIGINS`)
 
-## Vercel Deployment
+## Deployment
 
-### Backend project
+### Backend (Vercel)
+
 - Root Directory: `backend`
 - Framework: `Other`
 - Build Command: empty
 - Output Directory: empty
 
-Backend config is in `backend/vercel.json`:
+Backend config is defined in `backend/vercel.json`:
 
 ```json
 {"version": 2, "builds": [{"src": "app.py", "use": "@vercel/python"}], "routes": [{"src": "/(.*)", "dest": "app.py"}]}
 ```
 
 Set these environment variables in Vercel Production:
+
 - `SUPABASE_URL`
 - `SUPABASE_SECRET_ROLE_KEY`
 - `SUPABASE_PUBLISHABLE_KEY`
@@ -122,7 +143,8 @@ Set these environment variables in Vercel Production:
 - `FLASK_SECRET_KEY`
 - `ALLOWED_ORIGINS`
 
-### Frontend project
+### Frontend (Vercel)
+
 - Root Directory: `frontend`
 - Framework: `Other`
 - Build Command: empty
@@ -137,16 +159,19 @@ Frontend config is in `frontend/vercel.json`:
 ## Troubleshooting
 
 ### CORS issues
+
 - Ensure the frontend project rewrites `/api` requests to the backend Vercel domain.
 - Keep Flask-CORS as the single source of CORS headers.
 - Confirm the browser origin is present in `ALLOWED_ORIGINS`.
 
 ### 500 FUNCTION_INVOCATION_FAILED
-- Check the backend logs in Vercel.
-- Ensure `FLASK_SECRET_KEY` is set in Production.
+
+- Check backend logs in Vercel.
+- Ensure `FLASK_SECRET_KEY` is set in production.
 - Confirm the deployment root directory is `backend` and the app entry is `app.py`.
 
 ### Admin login issues
+
 - Confirm `ADMIN_EMAIL` matches the Supabase Auth user.
 - Check that the configured Supabase publishable key and URL are valid.
 - Verify the browser includes cookies and the `credentials: "include"` fetch option.
